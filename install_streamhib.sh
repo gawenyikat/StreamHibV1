@@ -82,19 +82,19 @@ if [ -d "StreamHibV2" ]; then
     rm -rf StreamHibV2
 fi
 
-git clone https://github.com/gawenyikat/StreamHibV2.git
+git clone https://github.com/gawenyikat/StreamHibV1.git
 check_command "Clone repository"
 
 cd StreamHibV2
 
 # 5. Setup Virtual Environment
 print_status "Membuat virtual environment..."
-python3 -m venv /root/StreamHibV2/venv
+python3 -m venv /root/StreamHibV1/venv
 check_command "Buat virtual environment"
 
 # 6. Aktivasi venv dan install dependensi Python
 print_status "Menginstall dependensi Python..."
-source /root/StreamHibV2/venv/bin/activate
+source /root/StreamHibV1/venv/bin/activate
 pip install flask flask-socketio flask-cors filelock apscheduler pytz gunicorn eventlet
 check_command "Install dependensi Python"
 
@@ -133,14 +133,14 @@ check_command "Konfigurasi firewall"
 
 # 12. Buat systemd service
 print_status "Membuat systemd service..."
-cat > /etc/systemd/system/StreamHibV2.service << 'EOF'
+cat > /etc/systemd/system/StreamHibV1.service << 'EOF'
 [Unit]
 Description=StreamHib Flask Service with Gunicorn
 After=network.target
 
 [Service]
-ExecStart=/root/StreamHibV2/venv/bin/gunicorn --worker-class eventlet -w 1 -b 0.0.0.0:5000 app:app
-WorkingDirectory=/root/StreamHibV2
+ExecStart=/root/StreamHibV1/venv/bin/gunicorn --worker-class eventlet -w 1 -b 0.0.0.0:5000 app:app
+WorkingDirectory=/root/StreamHibV1
 Restart=always
 User=root
 
@@ -152,20 +152,20 @@ check_command "Buat systemd service"
 # 13. Reload systemd dan enable service
 print_status "Mengaktifkan service..."
 systemctl daemon-reload
-systemctl enable StreamHibV2.service
+systemctl enable StreamHibV1.service
 systemctl enable nginx
 check_command "Enable service"
 
 # 14. Start service
 print_status "Memulai StreamHib V2..."
-systemctl start StreamHibV2.service
+systemctl start StreamHibV1.service
 systemctl start nginx
 check_command "Start service"
 
 # 15. Cek status service
 sleep 3
-if systemctl is-active --quiet StreamHibV2.service; then
-    print_success "StreamHib V2 berhasil berjalan!"
+if systemctl is-active --quiet StreamHibV1.service; then
+    print_success "StreamHib V1 berhasil berjalan!"
 else
     print_warning "Service mungkin belum siap, cek status dengan: systemctl status StreamHibV2.service"
 fi
@@ -180,7 +180,7 @@ echo -e "${NC}"
 # Dapatkan IP server
 SERVER_IP=$(curl -s ifconfig.me 2>/dev/null || curl -s ipinfo.io/ip 2>/dev/null || hostname -I | awk '{print $1}')
 
-print_success "StreamHib V2 berhasil diinstall!"
+print_success "StreamHib V1 berhasil diinstall!"
 echo ""
 print_status "Informasi Akses:"
 echo "  URL: http://${SERVER_IP}:5000"
@@ -199,15 +199,15 @@ echo "  3. Masuk menu 'Pengaturan Domain'"
 echo "  4. Setup domain dengan SSL otomatis"
 echo ""
 print_status "Perintah Berguna:"
-echo "  Status service: systemctl status StreamHibV2.service"
-echo "  Stop service: systemctl stop StreamHibV2.service"
-echo "  Start service: systemctl start StreamHibV2.service"
-echo "  Restart service: systemctl restart StreamHibV2.service"
-echo "  Lihat log: journalctl -u StreamHibV2.service -f"
-echo "  Lihat log recovery: journalctl -u StreamHibV2.service -f | grep RECOVERY"
-echo "  Lihat log domain: journalctl -u StreamHibV2.service -f | grep DOMAIN"
+echo "  Status service: systemctl status StreamHibV1.service"
+echo "  Stop service: systemctl stop StreamHibV1.service"
+echo "  Start service: systemctl start StreamHibV1.service"
+echo "  Restart service: systemctl restart StreamHibV1.service"
+echo "  Lihat log: journalctl -u StreamHibV1.service -f"
+echo "  Lihat log recovery: journalctl -u StreamHibV1.service -f | grep RECOVERY"
+echo "  Lihat log domain: journalctl -u StreamHibV1.service -f | grep DOMAIN"
 echo ""
-print_status "Direktori instalasi: /root/StreamHibV2"
+print_status "Direktori instalasi: /root/StreamHibV1"
 echo ""
 
 # Cek apakah port 5000 terbuka
