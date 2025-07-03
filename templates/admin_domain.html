@@ -57,6 +57,19 @@
                             <p class="font-semibold">{{ domain_config.configured_at or 'N/A' }}</p>
                         </div>
                     </div>
+                    
+                    <div class="mt-4 p-3 bg-blue-50 border border-blue-200 rounded">
+                        <h4 class="font-semibold text-blue-800 mb-2">Access URLs:</h4>
+                        <div class="space-y-1">
+                            {% if domain_config.ssl_enabled %}
+                                <p class="text-blue-700">Customer Panel: <a href="https://{{ domain_config.domain_name }}" target="_blank" class="underline">https://{{ domain_config.domain_name }}</a></p>
+                                <p class="text-blue-700">Admin Panel: <a href="https://{{ domain_config.domain_name }}/admin" target="_blank" class="underline">https://{{ domain_config.domain_name }}/admin</a></p>
+                            {% else %}
+                                <p class="text-blue-700">Customer Panel: <a href="http://{{ domain_config.domain_name }}" target="_blank" class="underline">http://{{ domain_config.domain_name }}</a></p>
+                                <p class="text-blue-700">Admin Panel: <a href="http://{{ domain_config.domain_name }}/admin" target="_blank" class="underline">http://{{ domain_config.domain_name }}/admin</a></p>
+                            {% endif %}
+                        </div>
+                    </div>
                 </div>
             {% else %}
                 <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
@@ -147,6 +160,12 @@
                 return;
             }
             
+            // Show loading state
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Setting up domain...';
+            submitBtn.disabled = true;
+            
             try {
                 const response = await fetch('/api/domain/setup', {
                     method: 'POST',
@@ -163,14 +182,36 @@
                 const result = await response.json();
                 
                 if (result.success) {
-                    alert('Domain configuration saved successfully!');
-                    location.reload();
+                    // Show success message
+                    const successDiv = document.createElement('div');
+                    successDiv.className = 'fixed top-4 right-4 bg-green-500 text-white p-4 rounded-lg shadow-lg z-50';
+                    successDiv.innerHTML = `
+                        <div class="flex items-center">
+                            <i class="fas fa-check-circle mr-2"></i>
+                            <span>${result.message}</span>
+                        </div>
+                    `;
+                    document.body.appendChild(successDiv);
+                    
+                    // Remove success message after 5 seconds
+                    setTimeout(() => {
+                        successDiv.remove();
+                    }, 5000);
+                    
+                    // Reload page after 2 seconds
+                    setTimeout(() => {
+                        location.reload();
+                    }, 2000);
                 } else {
-                    alert('Error: ' + result.message);
+                    alert('Setup failed: ' + result.message);
                 }
             } catch (error) {
                 console.error('Domain setup error:', error);
                 alert('Error setting up domain: ' + error.message);
+            } finally {
+                // Restore button state
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
             }
         });
     </script>
